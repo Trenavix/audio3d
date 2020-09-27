@@ -9,5 +9,4 @@ Upcoming plans:
 Screenshots:
 
 ![MainScreen](https://media.discordapp.net/attachments/356315343926329345/759568982612508693/unknown.png)
-![DebugCamera]
-(https://media.discordapp.net/attachments/356315343926329345/759569932508856350/unknown.png)
+![DebugCamera](https://media.discordapp.net/attachments/356315343926329345/759569932508856350/unknown.png)
