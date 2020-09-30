@@ -12,16 +12,6 @@
 var avgDB = 0;
 var avgFreq = 0;
 var AudioBufferArray = new Array(256);
-var mp3s = 
-[
-  "songs/carbon.mp3", 
-  "songs/dreamstate_logic.mp3", 
-  "songs/darklord.mp3", 
-  "songs/blackmill.m4a", 
-  "songs/luv_letter.mp3", 
-  "songs/centralplains.mp3", 
-  "songs/derelicts.mp3"
-];
 var currentMP3 = 4;
 var currentAudio = document.getElementById("htmlaudio");
 var context;

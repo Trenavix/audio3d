@@ -1,7 +1,9 @@
 var mp3s = <?php 
 $path = './songs';
-$out = array_values(array_diff(scandir($path), array('.', '..')));
-foreach ($out as $filename) {
-    $filename = $path . "/" . $filename;
+$files = array_values(array_diff(scandir($path), array('.', '..')));
+$directories = array();
+foreach ($files as $filename) 
+{
+    $directories[] = $path . "/" . $filename;
 }
-echo json_encode($out); ?>;
+echo json_encode($directories); ?>;
