@@ -9,11 +9,12 @@
 *                                                                           *
 ****************************************************************************/
 
+var body = document.getElementById('body');
 var canvas = document.getElementById('game-surface');
-gl = canvas.getContext("webgl", {
-    premultipliedAlpha: false  // Ask for non-premultiplied alpha
-  });
 var framecount = 0;
+
+// Ask for non-premultiplied alpha
+gl = canvas.getContext("webgl", { premultipliedAlpha: false }); 
 
 //set up global matrices
 var xRotationMatrix = new Float32Array(16);
@@ -29,10 +30,11 @@ var matProjUniformLocation;
 var camPosition = [0.0,0.0,-8.0];
 var camRotation = [-4.725,0.0,0.0]; //start looking backward (-1.5*pi)
 
-var InitDemo = function (e) 
+
+var Render = function (e) 
 {
-	canvas.setAttribute("tabindex", 0);
-	canvas.addEventListener("click", function() //do stuff by clicking on canvas
+	let touchEvent = 'ontouchstart' in window ? 'touchstart' : 'click'; //If mobile, touch event, otherwise click
+	body.addEventListener(touchEvent, function() //do stuff by clicking on canvas
 	{
 		AudioProcess(); //play audio/visualiser
 	});
@@ -75,15 +77,15 @@ var InitDemo = function (e)
 	setWaveVertices();
 	setWaveIndices();
 
+
+	//Blending/alpha params
+	gl = canvas.getContext("webgl", { alpha: false });
+	gl.depthMask(false);
+	gl.blendFunc(gl.SRC_ALPHA, gl.ONE_MINUS_SRC_ALPHA);
+
 	//
 	// Main render loop
 	//
-		gl = canvas.getContext("webgl", { alpha: false });
-		//gl.pixelStorei(gl.UNPACK_PREMULTIPLY_ALPHA_WEBGL, true);
-		gl.depthMask(false);
- 
-	// Turn off rendering to alpha
-	gl.blendFunc(gl.SRC_ALPHA, gl.ONE_MINUS_SRC_ALPHA);
 	var loop = function () 
 	{
 		framecount++;	
@@ -101,7 +103,6 @@ var InitDemo = function (e)
     	gl.viewport(0, 0, window.innerWidth, window.innerHeight);
 		gl.clearColor(0, 0, 0, 1.0);
 		gl.clear( gl.COLOR_BUFFER_BIT);//Camera
-		//gl.depthMask(false);
 		lookat =  //vec3 lookat pos relative to camRotation
 		[
 			Math.cos(camRotation[0]) * Math.cos(camRotation[1]),
@@ -111,7 +112,7 @@ var InitDemo = function (e)
 		addedPos = [0,0,0]; //ouput variable for vector addition
 		addedPos = vec3.add(addedPos, lookat, camPosition); //add cam position to the lookat offset
     	mat4.lookAt(viewMatrix, camPosition, addedPos, [0,1,0]);
-		gl.uniformMatrix4fv(matViewUniformLocation, gl.FALSE, viewMatrix);
+		gl.uniformMatrix4fv(matViewUniformLocation, gl.FALSE, viewMatrix); //update view Matrix
 
 		//idle loop if no audio is playing / all scales are 0 in visualiser
 		if(arrayIsEmpty(scalerHistory)) 
@@ -126,37 +127,37 @@ var InitDemo = function (e)
 		var green = Math.abs(Math.sin(red*3.14)); //green maxes when audiobuffer is in middle
 		var blue = 1-red;//inverse audio buffer
 
-//colour the particles' vertices
-for(var i = 0; i < boxVertices.length; i+=7)
-{
-	if (boxVertices[i+1] > 0) //If y coord of vertex is on top side of cube, set colours
-	{
-		boxVertices[i+3] = red; //red
-		boxVertices[i+4] = green; //green
-		   boxVertices[i+5] = blue; //blue
-	  }
-}
+		//colour the particles' vertices
+		for(var i = 0; i < boxVertices.length; i+=7)
+		{
+		if (boxVertices[i+1] > 0) //If y coord of vertex is on top side of cube, set colours
+			{
+				boxVertices[i+3] = red; //red
+				boxVertices[i+4] = green; //green
+		   	boxVertices[i+5] = blue; //blue
+	  		}
+		}
 
-//Load cube mesh into buffer for particles
-setAllVertexBuffers(boxVertices, boxIndices);
+		//Load cube mesh into buffer for particles
+		setAllVertexBuffers(boxVertices, boxIndices);
 
-//Manipulate particles in front
-for(var i=0; i< angleHistory.length; i+=8) //for each layer of particles
-{
-	var currentScale = scalerHistory[i]; //the scale of this layer
-	var currentSpread = spreadHistory[i]-i*1.5/8; //how far particles spread apart in single layer
-	var currentTranslation = [0, currentSpread, backwardTranslation]; //the spread and push-back combined into a translation
-	var total_Scale = [currentScale, currentScale, currentScale];
-	rotate_Scale_Translate([angleHistory[i], angle_y, 0], total_Scale, currentTranslation);
-	gl.drawElements(gl.TRIANGLES, boxIndices.length, gl.UNSIGNED_SHORT, 0);
-	rotate_Scale_Translate([angleHistory[i]+1.57, angle_y, 0], total_Scale, currentTranslation);
-	gl.drawElements(gl.TRIANGLES, boxIndices.length, gl.UNSIGNED_SHORT, 0);
-	rotate_Scale_Translate([angleHistory[i]+3.14, angle_y, 0], total_Scale, currentTranslation);
-	gl.drawElements(gl.TRIANGLES, boxIndices.length, gl.UNSIGNED_SHORT, 0);
-	rotate_Scale_Translate([angleHistory[i]+4.71, angle_y, 0], total_Scale, currentTranslation);
-	gl.drawElements(gl.TRIANGLES, boxIndices.length, gl.UNSIGNED_SHORT, 0);
-	backwardTranslation+=3.5;
-}
+		//Manipulate particles in front
+		for(var i=0; i< angleHistory.length; i+=8) //for each layer of particles
+		{
+			var currentScale = scalerHistory[i]; //the scale of this layer
+			var currentSpread = spreadHistory[i]-i*1.5/8; //how far particles spread apart in single layer
+			var currentTranslation = [0, currentSpread, backwardTranslation]; //the spread and push-back combined into a translation
+			var total_Scale = [currentScale, currentScale, currentScale];
+			rotate_Scale_Translate([angleHistory[i], angle_y, 0], total_Scale, currentTranslation);
+			gl.drawElements(gl.TRIANGLES, boxIndices.length, gl.UNSIGNED_SHORT, 0);
+			rotate_Scale_Translate([angleHistory[i]+1.57, angle_y, 0], total_Scale, currentTranslation);
+			gl.drawElements(gl.TRIANGLES, boxIndices.length, gl.UNSIGNED_SHORT, 0);
+			rotate_Scale_Translate([angleHistory[i]+3.14, angle_y, 0], total_Scale, currentTranslation);
+			gl.drawElements(gl.TRIANGLES, boxIndices.length, gl.UNSIGNED_SHORT, 0);
+			rotate_Scale_Translate([angleHistory[i]+4.71, angle_y, 0], total_Scale, currentTranslation);
+			gl.drawElements(gl.TRIANGLES, boxIndices.length, gl.UNSIGNED_SHORT, 0);
+			backwardTranslation+=3.5;
+		}
 
 		//draw frequency data
 		setWaveYVertices();
@@ -171,7 +172,6 @@ for(var i=0; i< angleHistory.length; i+=8) //for each layer of particles
 			gl.drawElements(gl.TRIANGLES, waveIndices.length, gl.UNSIGNED_SHORT, 0);
 		}
 		drawFreqData([red, green, blue, 1.0], [1.7, 1.5, 4]);
-		//drawFreqData([0, 0, 0, 1.0], [1.3, 1.4, 3.9]);
 		drawFreqData([1, 1, 1, 1.0], [0.5, 0.5, 3.8]);
 		gl.depthMask(true); 
 		gl.colorMask(false, false, false, true); //REQUIRED for alpha stacking
@@ -185,12 +185,11 @@ for(var i=0; i< angleHistory.length; i+=8) //for each layer of particles
 		drawFreqData([1, 1, 1, 0.75], [3.1, 1.9, 3.8]);
 		drawFreqData([1, 1, 1, 0.85], [3.6, 2.2, 3.9]);
 		drawFreqData([1, 1, 1, 0.95], [4.1, 2.2, 3.95]);
-		gl.colorMask(true, true, true, true);
+		gl.colorMask(true, true, true, true); //reset for non-alpha-stacking
 		gl.depthMask(true);
-		
 		gl.enable(gl.CULL_FACE);
-
 		
+		//end main render loop
 		requestAnimationFrame(loop);
 	};
 	requestAnimationFrame(loop);
@@ -204,7 +203,7 @@ var idleLoop = function()
 	gl.drawElements(gl.TRIANGLES, boxIndices.length, gl.UNSIGNED_SHORT, 0);
 }
 
-var rotate_Scale_Translate = function(angle, scale, translation) //scale is a size 3 float array
+var rotate_Scale_Translate = function(angle, scale, translation) //three mtx operations combined into one
 {
 	mat4.rotate(yRotationMatrix, identityMatrix, angle[0], [0, 0, 1]); //x
 	mat4.rotate(xRotationMatrix, identityMatrix, angle[1], [0, 1, 0]); //y

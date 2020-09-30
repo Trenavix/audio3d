@@ -10,11 +10,18 @@
 ****************************************************************************/
 
 var avgDB = 0;
-var maxFreqRange = 0;
 var avgFreq = 0;
 var AudioBufferArray = new Array(256);
-var AudioBufferThirds = new Array(3);
-var mp3s = ["carbon.mp3", "dreamstate_logic.mp3", "darklord.mp3", "blackmill.m4a", "luv_letter.mp3", "derelicts.mp3"];
+var mp3s = 
+[
+  "songs/carbon.mp3", 
+  "songs/dreamstate_logic.mp3", 
+  "songs/darklord.mp3", 
+  "songs/blackmill.m4a", 
+  "songs/luv_letter.mp3", 
+  "songs/centralplains.mp3", 
+  "songs/derelicts.mp3"
+];
 var currentMP3 = 4;
 var currentAudio = document.getElementById("htmlaudio");
 var context;
@@ -22,6 +29,9 @@ var src;
 var analyser;
 var AudioProcess = function () 
 {
+  console.log(mp3s[0]);
+  var elem = document.getElementById('clickStart');
+  if(elem != null)  elem.parentNode.removeChild(elem);
   currentAudio.crossOrigin = "anonymous";
   currentAudio.pause();
   console.log("AudioProcess is a go");
@@ -32,57 +42,38 @@ var AudioProcess = function ()
   currentAudio.load();
   currentAudio.play();
   currentAudio.controls = true;
-  if(context == null) context = new AudioContext(currentAudio);
-  if(src == null) src = context.createMediaElementSource(currentAudio);
-  if(analyser == null) analyser = context.createAnalyser();
+  if(context == null) 
+  {
+    context = new AudioContext(currentAudio);
+    if(src == null) src = context.createMediaElementSource(currentAudio);
+    if(analyser == null) analyser = context.createAnalyser();
+  }
 
-    src.connect(analyser);
-    analyser.connect(context.destination);
+  src.connect(analyser);
+  analyser.connect(context.destination);
 
-    analyser.fftSize = 256;
+  analyser.fftSize = 256;
 
-    var bufferLength = analyser.frequencyBinCount;
+  var bufferLength = analyser.frequencyBinCount;
 
-    var dbArray = new Uint8Array(bufferLength);
+  var dbArray = new Uint8Array(bufferLength);
 
-    var x = 0;
+  function renderFrame() 
+  {
+    requestAnimationFrame(renderFrame);
 
-    function renderFrame() 
-  	{
-      requestAnimationFrame(renderFrame);
-
-      x = 0;
-
-      analyser.getByteFrequencyData(dbArray);
-      var total = 0;
-      var thirds = bufferLength/3;
-      var maxLevelDB = 0;
-      avgFreq = 0;
-      AudioBufferThirds = new Float32Array(3);
-      var freqArray = new Float32Array(256);
-      for (var i = 0; i< bufferLength; i++)
-      {
-        freqArray[dbArray[i]] = i; //Frequency array INDEX = DB, its VALUE = freq
-      }
-      for (var i = 0; i< bufferLength; i++)
-      {
-        avgFreq += freqArray[i]; //total all freq values
-      }
+    analyser.getByteFrequencyData(dbArray);
+    var total = 0;
+    avgFreq = 0;
       avgFreq /= bufferLength; //average
       for (var i = 0; i < bufferLength; i++) 
       {
-		  AudioBufferArray[i] = dbArray[i];
-          total += dbArray[i];
-          if(dbArray[i] > maxLevelDB) {maxLevelDBIdx = dbArray[i]; maxFreqRange = i;}
-          if(i < thirds) {AudioBufferThirds[0] += dbArray[i];}
-          else if(i < thirds*2) {AudioBufferThirds[1] += dbArray[i];}
-          else {AudioBufferThirds[2] += dbArray[i];}
+		    AudioBufferArray[i] = dbArray[i];
+        total += dbArray[i];
       }
-      //console.log(maxLevelDB.toString());
-      for(var i = 0; i < AudioBufferThirds.length; i++) AudioBufferThirds[i] /= thirds;
 	  avgDB = total/dbArray.length; //average decibel across ALL frequencies
     avgDB *= 1.8; //Expiramental: Multiplier for greater differences
-    if(currentMP3 == 4) avgDB /= 1.285; //m4a has wider freq range
+    if(mp3s[currentMP3].localeCompare("songs/blackmill.m4a") == 0) avgDB /= 1.285; //m4a has wider freq range
     if (avgDB > 255) avgDB = 255;
     }
     currentAudio.play();
