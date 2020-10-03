@@ -1,11 +1,34 @@
-var resizeCanvas = function ()
+function addToMasterVtxList(vtxList, idxList, newVertices, newIndices)
 {
-  canvas.width = window.innerWidth;
-  canvas.height = window.innerHeight;
+    var initVertSize = vtxList.length;
+    var initIdxSize = idxList.length;
+    resizeArray(vtxList, initVertSize+newVertices.length, 0);
+    resizeArray(idxList, initIdxSize+newIndices.length, 0);
+    for(let i=initVertSize; i< vtxList.length; i++) //from newest vertex index and on...
+    {
+        vtxList[i] = newVertices[i-initVertSize]; //Fill in new vertex data
+    }
+    for(let i=initIdxSize; i< idxList.length; i++) //from newest index and on...
+    {
+        //Fill in new index data, but ADD TO EACH INDEX the vtx count before we added to array
+        idxList[i] = newIndices[i-initIdxSize]+(initVertSize/7); //7 floats/array indices per vertex
+    }
 }
 
+function resizeCanvas()
+{
+    canvas.width = document.body.clientWidth;//width of window
+    canvas.height = document.body.clientHeight;
+}
 
-var addEntryToFrontOfArray = function(array, newValue)
+function resizeArray(arr, newSize, defaultValue) 
+{
+    while(newSize > arr.length)
+        arr.push(defaultValue);
+    arr.length = newSize;
+}
+
+function addEntryToFrontOfArray(array, newValue)
 {
     for(var i = array.length-1; i>=0; i--)
     {
@@ -29,7 +52,7 @@ var extendArrayWithData = function(array, extraArray)
     return newArray;
 }
 
-var injectIntoArray = function(array, injectingArray, index)
+function injectIntoArray(array, injectingArray, index)
 {
     for(var i = 0; i < injectingArray.length; i++)
     {
@@ -39,7 +62,14 @@ var injectIntoArray = function(array, injectingArray, index)
 
 var arrayIsEmpty = function(array)
 {
-  var total = 0;
-  for(let i=0; i<array.length; i++) total += array[i]; //add up all of array's values
-  return (total == 0);
+    var total = 0;
+    for(let i=0; i<array.length; i++) total += array[i]; //add up all of array's values
+    return (total == 0);
+}
+
+function rotatem4(angle, matrixStack) //scale is a size 3 float array
+{
+    matrixStack.rotateX(angle[0]);
+    matrixStack.rotateY(angle[1]);
+    matrixStack.rotateZ(angle[2]);
 }

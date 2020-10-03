@@ -1,7 +1,7 @@
-<!DOCTYPE html>
+<!DOCTYPE php>
 <?php error_reporting(E_ALL); ?>
     <head>
-        <title>Audio3D</title>
+        <title>Trenavix's private club</title>
         <style>
             html, body 
             {
@@ -71,11 +71,11 @@
         <div class="background">
             <canvas id="game-surface" style='position:fixed; left:0px; top:0px; z-index: -1;'>
                 <script src='directories.php'></script>
+                <script src="audio.js"></script>
                 <script src="dependencies/gl-matrix.js"></script>
                 <script src="dependencies/functions.js"></script>
                 <script src="dependencies/keydrown.js"></script>
                 <script src="shadersAndBuffers.js"></script>
-                <script src="audio.js"></script>
                 <script src="audio3d.js"></script>
                 <script>Render();</script>
             </canvas>

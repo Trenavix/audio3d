@@ -1,13 +1,13 @@
-/****************************************************************************
-*                                                                           *
-* audio3d - A 3D audio visualiser for JS                                    *
-* https://github.com/trenavix/                                              *
-* Copyright (C) 2020 Trenavix. All rights reserved.                         *
-*                                                                           *
-* License:                                                                  *
-* GNU/GPLv2 http://www.gnu.org/licenses/gpl-2.0.html                        *
-*                                                                           *
-****************************************************************************/
+/*********************************************************
+*                                                        *
+*    audio3d - A 3D audio visualiser for JS              *
+*    https://github.com/trenavix/                        *
+*    Copyright (C) 2020 Trenavix. All rights reserved.   *
+*                                                        *
+*    License:                                            *
+*   GNU/GPLv2 http://www.gnu.org/licenses/gpl-2.0.html   *
+*                                                        *
+*********************************************************/
 
 var body = document.getElementById('body');
 var canvas = document.getElementById('game-surface');
@@ -42,7 +42,7 @@ var Render = function (e)
 	resizeCanvas(); //initialise canvas
 	window.addEventListener('resize', resizeCanvas, false); //re-initialise on any window resize
 
-	//Keyboard controls
+	//Keyboard controls for debug camera
 	kd.run(function () { kd.tick(); } ); //start listener
 	kd.RIGHT.down(function() {camRotation[0] += 0.05} );
 	kd.LEFT.down(function() {camRotation[0] -= 0.05 }); 
@@ -57,7 +57,7 @@ var Render = function (e)
 
 	//main variables for particle effects
 	var angle_x = 0; var angle_y = 0; var spread = 0; 
-
+	
 	generateShaders(); //Initialise shaders for WebGL
 	
 	//Worldview initialisation

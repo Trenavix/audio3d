@@ -15,8 +15,8 @@ var angleHistory = new Float32Array(128);
 var angleHistoryX = new Float32Array(128);
 var scalerHistory = new Float32Array(128);
 var spreadHistory = new Float32Array(128);
-var waveVertices = new Float32Array(3584); //256 (points) * 7 (floats per vtx) * 2 (up and down)
-var waveIndices = new Uint16Array(1530); //255 quads * 2 tris per quad * 3 vtx per tri
+var waveVertices = new Float32Array(audioBufferSize * 14); //points * 7 (floats per vtx) * 2 (up and down)
+var waveIndices = new Uint16Array((audioBufferSize-1)*6); //quads * 2 tris per quad * 3 vtx per tri
 var vertexShaderText = 
 [
 'precision mediump float;',
@@ -149,19 +149,19 @@ var boxVertices =
 
 var setWaveVertices = function()
 {
-	var size = 256;
+	var size = audioBufferSize;
 	var waveIndex = 0;
 	for(var i = 0; i < size*7; i+=7) //7 floats in vertex
 	{
 		waveIndex = i/7;
-		waveVertices[i] = ((waveIndex)/16); //X coords: centre at midpoint of audiobuffer, divided by 64 for 3 coord delta
+		waveVertices[i] = ((waveIndex)/audioBufferSize*16); //X coords: centre at midpoint of audiobuffer, divided by 64 for 3 coord delta
 		//waveVertices[i+1] = AudioBufferArray[waveIndex]/128; //y coords = decibel values up to +2 coord range
 		waveVertices[i+2] = 6.0; //z coords preset for now
 	}
 	for(var i = size*7; i < waveVertices.length; i+=7) //7 floats in vertex, start at next half
 	{
 		waveIndex = (i-(size*7))/7;
-		waveVertices[i] = ((waveIndex)/16); //X coords: centre at midpoint of audiobuffer
+		waveVertices[i] = ((waveIndex)/audioBufferSize*16); //X coords: centre at midpoint of audiobuffer
 		//waveVertices[i+1] = -(AudioBufferArray[waveIndex]/128); //y coords = -decibel values up to -2 coord range
 		waveVertices[i+2] = 6.0; //z coords preset for now
 	}
@@ -169,16 +169,17 @@ var setWaveVertices = function()
 
 var setWaveYVertices = function()
 {
-	var size = 256;
+	var size = audioBufferSize;
 	for(var i = 0; i < size*7; i+=7) //7 floats in vertex
 	{
 		waveIndex = i/7;
-		waveVertices[i+1] = AudioBufferArray[waveIndex]/128; //y coords = decibel values up to +2 coord range
+		waveVertices[i+1] = (AudioBufferArray[waveIndex]/100); //y coords = decibel values up to +2 coord range
+		//if((i % 32 == 0 && framecount % 300 == 0) && AudioBufferArray[waveIndex] != null) console.log(i.toString() + ":" + AudioBufferArray[waveIndex].toString());
 	}
 	for(var i = size*7; i < waveVertices.length; i+=7) //7 floats in vertex, start at next half
 	{
 		waveIndex = (i-(size*7))/7;
-		waveVertices[i+1] = -(AudioBufferArray[waveIndex]/128); //y coords = -decibel values up to -2 coord range
+		waveVertices[i+1] = -(AudioBufferArray[waveIndex]/100); //y coords = -decibel values up to -2 coord range
 	}
 }
 
@@ -195,7 +196,7 @@ var setWaveVertexColours = function(colour)
 
 var setWaveIndices = function()
 {
-	var size = 256;
+	var size = audioBufferSize;
 	var currentcoord = 0; //Max Y coord idx in vtx array
 	var nextcoord = 0;
 	for(var i = 0; i<waveIndices.length; i+=6) //for each 2 triangles
