@@ -1,0 +1,54 @@
+html, body 
+{
+    width:  100%;
+    height: 100%;
+    margin: 0px;
+    border: 0;
+    overflow: hidden;
+    display: block;
+    position: relative;
+}
+.clickStart
+{
+	z-index: 1;
+    position: fixed;
+    top: 50%;
+    left: 25%;
+    height: 150px;
+    width: 50%;
+    line-height: 100px;
+    text-align: center;
+    margin-top: -50px;
+	background-color: #64646464;
+}
+.txtWindow
+{
+    display: inline-block;
+    vertical-align: middle;
+    line-height: 150px;
+    font-size: 4vw;
+    color: #CECECEFF;
+}
+.subTxtWindow
+{
+    display: inline-block;
+    vertical-align: middle;
+    line-height: 40px;
+    font-size: 1.5vw;
+    color: #CECECEFF;
+}
+div.keepleft
+{
+    position:absolute;
+    left:0px;
+    bottom:0px;
+}
+.background 
+{
+    position:absolute;
+    left:0px;
+    top:0px;
+    margin: 0px;
+    padding: 0px;
+    z-index:-1;	
+}

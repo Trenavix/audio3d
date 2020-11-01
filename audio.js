@@ -10,7 +10,7 @@
 *********************************************************/
 
 var avgDB = 0; //global average decibel variable
-var audioBufferSize = 256;
+var audioBufferSize = 512;
 var AudioBufferArray = new Array(audioBufferSize); //global audiobuffer decibel 
 var currentMP3 = mp3s.length-1; //start index at first mp3
 var currentAudio = document.getElementById("htmlaudio"); //get audio/controls
@@ -64,7 +64,7 @@ var AudioProcess = function ()
 	  avgDB = total/bufferLength; //average decibel across ALL frequencies
     avgDB *= 2; //Expiramental: Multiplier for greater differences
     if(mp3s[currentMP3].localeCompare("songs/blackmill.m4a") == 0) avgDB /= 1.285; //m4a has wider freq range thus higher avg dB
-    if (avgDB > 255) avgDB = 255; //overflow protection
+    //if (avgDB > 255) avgDB = 255; //overflow protection
   }
   currentAudio.play();
   renderFrame();

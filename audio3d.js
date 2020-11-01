@@ -29,6 +29,7 @@ var matViewUniformLocation;
 var matProjUniformLocation;
 var camPosition = [0.0,0.0,-8.0];
 var camRotation = [-4.725,0.0,0.0]; //start looking backward (-1.5*pi)
+var matrixStack = new MatrixStack();
 
 
 var Render = function (e) 
@@ -79,9 +80,9 @@ var Render = function (e)
 
 
 	//Blending/alpha params
-	gl = canvas.getContext("webgl", { alpha: false });
-	gl.depthMask(false);
-	gl.blendFunc(gl.SRC_ALPHA, gl.ONE_MINUS_SRC_ALPHA);
+    gl = canvas.getContext("webgl", { alpha: true });
+    gl.depthMask(false);
+    gl.blendFunc(gl.SRC_ALPHA, gl.ONE_MINUS_SRC_ALPHA);
 
 	//
 	// Main render loop
@@ -89,6 +90,9 @@ var Render = function (e)
 	var loop = function () 
 	{
 		framecount++;	
+
+		//Set up headers, stacks, presets
+        matrixStack = new MatrixStack();
 
 		//set all main variables for particles
 		angle_x += 0.0003*avgDB;
@@ -130,33 +134,12 @@ var Render = function (e)
 		//colour the particles' vertices
 		for(var i = 0; i < boxVertices.length; i+=7)
 		{
-		if (boxVertices[i+1] > 0) //If y coord of vertex is on top side of cube, set colours
+			if (boxVertices[i+1] > 0) //If not centre coord, set colours
 			{
 				boxVertices[i+3] = red; //red
 				boxVertices[i+4] = green; //green
-		   	boxVertices[i+5] = blue; //blue
+		   		boxVertices[i+5] = blue; //blue
 	  		}
-		}
-
-		//Load cube mesh into buffer for particles
-		setAllVertexBuffers(boxVertices, boxIndices);
-
-		//Manipulate particles in front
-		for(var i=0; i< angleHistory.length; i+=8) //for each layer of particles
-		{
-			var currentScale = scalerHistory[i]; //the scale of this layer
-			var currentSpread = spreadHistory[i]-i*1.5/8; //how far particles spread apart in single layer
-			var currentTranslation = [0, currentSpread, backwardTranslation]; //the spread and push-back combined into a translation
-			var total_Scale = [currentScale, currentScale, currentScale];
-			rotate_Scale_Translate([angleHistory[i], angle_y, 0], total_Scale, currentTranslation);
-			gl.drawElements(gl.TRIANGLES, boxIndices.length, gl.UNSIGNED_SHORT, 0);
-			rotate_Scale_Translate([angleHistory[i]+1.57, angle_y, 0], total_Scale, currentTranslation);
-			gl.drawElements(gl.TRIANGLES, boxIndices.length, gl.UNSIGNED_SHORT, 0);
-			rotate_Scale_Translate([angleHistory[i]+3.14, angle_y, 0], total_Scale, currentTranslation);
-			gl.drawElements(gl.TRIANGLES, boxIndices.length, gl.UNSIGNED_SHORT, 0);
-			rotate_Scale_Translate([angleHistory[i]+4.71, angle_y, 0], total_Scale, currentTranslation);
-			gl.drawElements(gl.TRIANGLES, boxIndices.length, gl.UNSIGNED_SHORT, 0);
-			backwardTranslation+=3.5;
 		}
 
 		//draw frequency data
@@ -188,6 +171,37 @@ var Render = function (e)
 		gl.colorMask(true, true, true, true); //reset for non-alpha-stacking
 		gl.depthMask(true);
 		gl.enable(gl.CULL_FACE);
+
+		//Load cube mesh into buffer for particles
+		setAllVertexBuffers(boxVertices, boxIndices);
+
+		//Manipulate particles in front
+        gl.enable(gl.BLEND);
+		for(var i=0; i< angleHistory.length; i+=8) //for each layer of particles
+		{
+			matrixStack.save();
+			var currentScale = scalerHistory[i]; //the scale of this layer
+			var currentSpread = spreadHistory[i]-i*1.5/8; //how far particles spread apart in single layer
+			var currentTranslation = [0, currentSpread, backwardTranslation]; //the spread and push-back combined into a translation
+			var total_Scale = [currentScale, currentScale, currentScale];
+			
+			for(let j=0; j<4;j++)
+			{
+				//var stackedScale = spread - 0.725; //0 to 1.45 is the spread range - move it between negative/positive
+				matrixStack.save();
+				rotate_Scale_Translate_Stack([angleHistory[i]+(j*1.57), angle_y, 0], total_Scale, currentTranslation);
+				matrixStack.save();
+				rotate_Scale_Translate_Stack([4*Math.sin(spreadHistory[i]),0,4*Math.sin(angleHistory[i]/4)], [1, 0.1, 1], [0,0,0]);
+				//rotate_Stack([4*Math.sin(spreadHistory[i]),0,4*Math.sin(angleHistory[i]/4)]);
+				matrixStack.restore();
+				gl.drawElements(gl.TRIANGLES, boxIndices.length, gl.UNSIGNED_SHORT, 0);
+				matrixStack.restore();
+			}
+			matrixStack.restore();
+			backwardTranslation+=3.5;
+		}
+		gl.disable(gl.BLEND);
+		
 		
 		//end main render loop
 		requestAnimationFrame(loop);
@@ -214,3 +228,22 @@ var rotate_Scale_Translate = function(angle, scale, translation) //three mtx ope
 	gl.uniformMatrix4fv(matWorldUniformLocation, gl.FALSE, worldMatrix);
 }
 
+var rotate_Scale_Translate_Stack = function(angle, scale, translation)
+{
+	rotatem4([angle[2], angle[1], angle[0]], matrixStack);
+	matrixStack.translate(translation);
+	matrixStack.scale(scale);
+	gl.uniformMatrix4fv(matWorldUniformLocation, gl.FALSE, matrixStack.getCurrentMatrix());
+}
+
+var rotate_Stack = function(angle)
+{
+	rotatem4(angle, matrixStack);
+	gl.uniformMatrix4fv(matWorldUniformLocation, gl.FALSE, matrixStack.getCurrentMatrix());
+}
+
+var scale_Stack = function(scale)
+{
+	matrixStack.scale(scale);
+	gl.uniformMatrix4fv(matWorldUniformLocation, gl.FALSE, matrixStack.getCurrentMatrix());
+}
